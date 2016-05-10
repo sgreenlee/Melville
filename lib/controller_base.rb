@@ -3,6 +3,7 @@ require 'active_support/core_ext'
 require 'active_support/inflector'
 require 'erb'
 require_relative './session'
+require_relative './flash'
 require 'byebug'
 
 class ControllerBase
@@ -12,7 +13,7 @@ class ControllerBase
   def initialize(req, res, params = {})
     @req = req
     @res = res
-    @params = params
+    @params = req.params.merge(params)
   end
 
   # Helper method to alias @already_built_response
@@ -24,7 +25,7 @@ class ControllerBase
   def redirect_to(url)
     raise 'already built response' if already_built_response?
     @res['Location'] = url
-    session.store_session(@res)
+    persist_cookies
     @res.status = 302
     @already_built_response = true
   end
@@ -35,7 +36,7 @@ class ControllerBase
   def render_content(content, content_type)
     raise 'response already built' if already_built_response?
     @res['Content-Type'] = content_type
-    session.store_session(@res)
+    persist_cookies
     @res.write(content)
     @already_built_response = true
   end
@@ -58,6 +59,15 @@ class ControllerBase
   # method exposing a `Session` object
   def session
     @session ||= Session.new(@req)
+  end
+
+  def flash
+    @flash ||= Flash.new(@req)
+  end
+
+  def persist_cookies
+    session.store_session(@res)
+    flash.store_flash(@res)
   end
 
   # use this with the router to call action_name (:index, :show, :create...)

@@ -32,7 +32,7 @@ class Route
     # debugger
     @pattern.named_captures.each do |name, positions|
       positions.each do |position|
-        params[name] = match[position]
+        params[name.to_sym] = match[position]
       end
     end
     params
@@ -68,7 +68,8 @@ class Router
 
   # should return the route that matches this request
   def match(req)
-    @routes.index { |route| route.matches?(req) }
+    idx = @routes.index { |route| route.matches?(req) }
+    @routes[idx] if idx
   end
 
   # either throw 404 or call run on a matched route
