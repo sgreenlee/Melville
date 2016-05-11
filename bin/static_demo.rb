@@ -1,5 +1,7 @@
 require 'rack'
 require 'byebug'
+require_relative '../lib/exceptions'
+require_relative '../lib/static_files'
 require_relative '../lib/controller_base'
 require_relative '../lib/router'
 
@@ -20,11 +22,17 @@ router.draw do
   get Regexp.new("^/simon/says/(?<message>\\w+)$"), FlashController, :set_flash
 end
 
-app = Proc.new do |env|
+run_proc = Proc.new do |env|
   req = Rack::Request.new(env)
   res = Rack::Response.new
   router.run(req, res)
   res.finish
+end
+
+app = Rack::Builder.new do
+  use StaticFileServer
+  use ExceptionHandler
+  run run_proc
 end
 
 Rack::Server.start(

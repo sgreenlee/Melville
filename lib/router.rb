@@ -12,7 +12,6 @@ class Route
 
   # checks if pattern matches path and method matches request method
   def matches?(req)
-    # debugger
     req.request_method == @method && req.fullpath =~ @pattern
   end
 
@@ -29,7 +28,6 @@ class Route
   def build_params(req)
     params = {}
     match = @pattern.match(req.fullpath)
-    # debugger
     @pattern.named_captures.each do |name, positions|
       positions.each do |position|
         params[name.to_sym] = match[position]

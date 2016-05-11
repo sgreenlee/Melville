@@ -52,8 +52,9 @@ class ControllerBase
 
   def get_template_path(template_name)
     controller_name = self.class.name.underscore
-    relative_path = "../../views/#{controller_name}/#{template_name}.html.erb"
-    File.expand_path(relative_path, __FILE__)
+    # relative_path = "../../views/#{controller_name}/#{template_name}.html.erb"
+    # File.expand_path(relative_path, __FILE__)
+    "views/#{controller_name}/#{template_name}.html.erb"
   end
 
   # method exposing a `Session` object

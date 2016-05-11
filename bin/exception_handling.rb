@@ -1,0 +1,72 @@
+require 'rack'
+require 'byebug'
+require_relative '../lib/controller_base'
+require_relative '../lib/router'
+require_relative '../lib/exceptions'
+
+$cats = [
+  { id: 1, name: "Curie" },
+  { id: 2, name: "Markov" }
+]
+
+$statuses = [
+  { id: 1, cat_id: 1, text: "Curie loves string!" },
+  { id: 2, cat_id: 2, text: "Markov is mighty!" },
+  { id: 3, cat_id: 1, text: "Curie is cool!" }
+]
+
+class StatusesController < ControllerBase
+  def index
+    # debugger
+    statuses = $statuses.select do |s|
+      s[:cat_id] == Integer(params[:cat_id])
+    end
+
+    render_content(statuses.to_json, "application/json")
+  end
+end
+
+class BrokenController < ControllerBase
+  def index
+    a = 5
+    b = 6
+    private_method
+  end
+
+  private
+
+  def private_method
+    raise 'Something went wrong'
+  end
+end
+
+class Cats2Controller < ControllerBase
+  def index
+    render_content($cats.to_json, "application/json")
+  end
+end
+
+router = Router.new
+router.draw do
+  get Regexp.new("^/cats$"), Cats2Controller, :index
+  get Regexp.new("^/cats/(?<cat_id>\\d+)/statuses$"), StatusesController, :index
+  get Regexp.new("^/error$"), BrokenController, :index
+end
+
+run_proc = Proc.new do |env|
+  req = Rack::Request.new(env)
+  res = Rack::Response.new
+  router.run(req, res)
+  res.finish
+end
+
+app = Rack::Builder.new do
+  use ExceptionHandler
+  run run_proc
+end
+
+
+Rack::Server.start(
+ app: app,
+ Port: 3000
+)
