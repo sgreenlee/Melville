@@ -4,9 +4,12 @@ require 'active_support/inflector'
 require 'erb'
 require_relative './session'
 require_relative './flash'
+require_relative './csrf_protection'
 require 'byebug'
 
 class ControllerBase
+  include ProtectFromForgery
+
   attr_reader :req, :res, :params
 
   # Setup the controller
@@ -69,6 +72,7 @@ class ControllerBase
   def persist_cookies
     session.store_session(@res)
     flash.store_flash(@res)
+    store_authenticity_token
   end
 
   # use this with the router to call action_name (:index, :show, :create...)
